@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.PriorityQueue;
-import java.util.Queue;
 import java.util.Scanner;
 
 public class Cache {
@@ -135,7 +133,50 @@ public class Cache {
     }
 
     private static void dataStore(String address, int size, String data) {
+        String binAddress = hexToBinary(address);
 
+        int t = 32 - s - b;// How many bits the tag is
+        String tag;
+        int setIndex;
+        int blockOffset;
+
+        // Now, we must parse the address
+        blockOffset = binaryToInteger(binAddress.substring(t + s));
+        setIndex = binaryToInteger(binAddress.substring(t, t + s));
+        tag = binAddress.substring(0, 32 - s - b);
+
+        // Get current set
+        Line currentSet[] = cache[setIndex];
+
+        // Now, we search for our tag in the lines of the set
+        //If found, we edit its data
+        for (Line line : currentSet) {
+            if (line.getValidBit() == 1) {
+                if ((line.getTag().equals(tag))) {
+                    line.setData(editString(line.getData(), data, blockOffset));//Changes the data
+                }
+            }
+        }
+
+        //if it is found or not found in the cache, we still write to memory
+        writeToRam(address,data);
+    }
+
+    private static void writeToRam(String address, String data) {
+        int index = Integer.parseInt(address, 16);
+        index = index / 8;
+        if (index >= ram.size()) {
+            return;
+        }
+        ram.set(index, editString(ram.get(index), data, 0));
+    }
+
+    private static String editString(String originalString, String data, int blockOffset) {
+        StringBuilder stringBuilder = new StringBuilder(originalString);
+
+        stringBuilder.replace(blockOffset, blockOffset + data.length(), data);
+
+        return stringBuilder.toString();
     }
 
     // s is how many bits the set part is, and b is how many bits the block offset
@@ -152,7 +193,6 @@ public class Cache {
         blockOffset = binaryToInteger(binAddress.substring(t + s));
         setIndex = binaryToInteger(binAddress.substring(t, t + s));
         tag = binAddress.substring(0, 32 - s - b);
-        
 
         // Get current set
         Line currentSet[] = cache[setIndex];
@@ -198,7 +238,7 @@ public class Cache {
     private static String accessRam(String address) {
         int index = Integer.parseInt(address, 16);
         index = index / 8;
-        if (index >= ram.size()){
+        if (index >= ram.size()) {
             return "0000000000000000";
         }
         return ram.get(index);
