@@ -73,7 +73,7 @@ public class Cache {
         Scanner scanner = new Scanner(traceFile);
         String currentCommand;
 
-        // Commands are composed of an address, a int representing size, and sometimes
+        // Commands are composed of an address, an int representing size, and sometimes
         // some data
         char commandType;
         String address;
@@ -119,68 +119,7 @@ public class Cache {
 
     }
 
-    private static void printCache(int S, int E) throws FileNotFoundException {
-        PrintWriter writer = new PrintWriter("cache.txt");
-
-        for (int i = 0; i < S; i++) {
-            writer.println("SET " + i + ": ");
-            for (int j = 0; j < E; j++) {
-                writer.println(cache[i][j].toString());
-            }
-            writer.println("--------------------------");
-        }
-        writer.close();
-    }
-
-    private static void dataStore(String address, int size, String data) {
-        String binAddress = hexToBinary(address);
-
-        int t = 32 - s - b;// How many bits the tag is
-        String tag;
-        int setIndex;
-        int blockOffset;
-
-        // Now, we must parse the address
-        blockOffset = binaryToInteger(binAddress.substring(t + s));
-        setIndex = binaryToInteger(binAddress.substring(t, t + s));
-        tag = binAddress.substring(0, 32 - s - b);
-
-        // Get current set
-        Line currentSet[] = cache[setIndex];
-
-        // Now, we search for our tag in the lines of the set
-        //If found, we edit its data
-        for (Line line : currentSet) {
-            if (line.getValidBit() == 1) {
-                if ((line.getTag().equals(tag))) {
-                    line.setData(editString(line.getData(), data, blockOffset));//Changes the data
-                }
-            }
-        }
-
-        //if it is found or not found in the cache, we still write to memory
-        writeToRam(address,data);
-    }
-
-    private static void writeToRam(String address, String data) {
-        int index = Integer.parseInt(address, 16);
-        index = index / 8;
-        if (index >= ram.size()) {
-            return;
-        }
-        ram.set(index, editString(ram.get(index), data, 0));
-    }
-
-    private static String editString(String originalString, String data, int blockOffset) {
-        StringBuilder stringBuilder = new StringBuilder(originalString);
-
-        stringBuilder.replace(blockOffset, blockOffset + data.length(), data);
-
-        return stringBuilder.toString();
-    }
-
-    // s is how many bits the set part is, and b is how many bits the block offset
-    // part is. E is how many lines there are per set
+    // Loads data into cache if it is not already in the cache
     private static void dataLoad(String address, int size) {
         String binAddress = hexToBinary(address);
 
@@ -235,6 +174,55 @@ public class Cache {
 
     }
 
+    // Stores the data into the cache and memory if already in the cache, if not
+    // straight to memory
+    private static void dataStore(String address, int size, String data) {
+        String binAddress = hexToBinary(address);
+
+        int t = 32 - s - b;// How many bits the tag is
+        String tag;
+        int setIndex;
+        int blockOffset;
+
+        // Now, we must parse the address
+        blockOffset = binaryToInteger(binAddress.substring(t + s));
+        setIndex = binaryToInteger(binAddress.substring(t, t + s));
+        tag = binAddress.substring(0, 32 - s - b);
+
+        // Get current set
+        Line currentSet[] = cache[setIndex];
+
+        // Now, we search for our tag in the lines of the set
+        // If found, we edit its data
+        for (Line line : currentSet) {
+            if (line.getValidBit() == 1) {
+                if ((line.getTag().equals(tag))) {
+                    line.setData(editString(line.getData(), data, blockOffset));// Changes the data
+                }
+            }
+        }
+
+        // if it is found or not found in the cache, we still write to memory
+        writeToRam(address, data);
+    }
+
+    private static void writeToRam(String address, String data) {
+        int index = Integer.parseInt(address, 16);
+        index = index / 8;
+        if (index >= ram.size()) {
+            return;
+        }
+        ram.set(index, editString(ram.get(index), data, 0));
+    }
+
+    //Replaces the characters after blockOffset in the originalString with data.
+    private static String editString(String originalString, String data, int blockOffset) {
+        StringBuilder stringBuilder = new StringBuilder(originalString);
+        stringBuilder.replace(blockOffset, blockOffset + data.length(), data);
+        return stringBuilder.toString();
+    }
+
+    //Returns 0 if a non existant adress is accesed.
     private static String accessRam(String address) {
         int index = Integer.parseInt(address, 16);
         index = index / 8;
@@ -242,6 +230,20 @@ public class Cache {
             return "0000000000000000";
         }
         return ram.get(index);
+    }
+
+    // Prints to cache.txt
+    private static void printCache(int S, int E) throws FileNotFoundException {
+        PrintWriter writer = new PrintWriter("cache.txt");
+
+        for (int i = 0; i < S; i++) {
+            writer.println("SET " + i + ": ");
+            for (int j = 0; j < E; j++) {
+                writer.println(cache[i][j].toString());
+            }
+            writer.println("--------------------------");
+        }
+        writer.close();
     }
 
     private static String intToHex(int number) {
