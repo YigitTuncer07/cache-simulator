@@ -94,11 +94,6 @@ public class Cache {
                 data = currentCommand.substring(15);
             }
 
-            // System.out.println("Command Type: " + commandType);
-            // System.out.println("Address: " + address);
-            // System.out.println("Size: " + size);
-            // System.out.println("Data: " + data + "\n");
-
             switch (commandType) {
                 case 'L':
 
@@ -146,7 +141,7 @@ public class Cache {
     // s is how many bits the set part is, and b is how many bits the block offset
     // part is. E is how many lines there are per set
     private static void dataLoad(String address, int size) {
-
+        address = "0000aaaa";
         String binAddress = hexToBinary(address);
 
         int t = 32 - s - b;// How many bits the tag is
@@ -156,9 +151,9 @@ public class Cache {
 
         // Now, we must parse the address
         blockOffset = binaryToInteger(binAddress.substring(t + s));
-        setIndex = binaryToInteger(binAddress.substring(t, t + s + 1));
+        setIndex = binaryToInteger(binAddress.substring(t, t + s));
         tag = binAddress.substring(0, 32 - s - b);
-        System.out.println(tag);
+        
 
         // Get current set
         Line currentSet[] = cache[setIndex];
@@ -202,7 +197,6 @@ public class Cache {
     }
 
     private static String accessRam(String address) {
-        System.out.println(address);
         int index = Integer.parseInt(address, 16);
         index = index / 8;
         return ram.get(index);
