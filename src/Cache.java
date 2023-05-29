@@ -1,7 +1,9 @@
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.PriorityQueue;
 import java.util.Queue;
@@ -11,7 +13,7 @@ public class Cache {
 
     private static ArrayList<String> ram = new ArrayList<>();
     private static Line cache[][];
-    private static Queue<Line> queues[];
+    private static ArrayList<ArrayList<Line>> queues = new ArrayList<>();
     private static int s;
     private static int E;
     private static int b;
@@ -66,15 +68,12 @@ public class Cache {
         }
 
         // Create queues for the sets of the cache, so that we know which line to evict.
-        queues = new Queue[S];
-
         for (int i = 0; i < S; i++) {
-            queues[i] = new PriorityQueue<Line>();
+            queues.add(new ArrayList<Line>());
         }
 
         Scanner scanner = new Scanner(traceFile);
         String currentCommand;
-        boolean isHit;
 
         // Commands are composed of an address, a int representing size, and sometimes
         // some data
@@ -108,13 +107,40 @@ public class Cache {
                     break;
                 case 'S':
 
+                    dataStore(address, size, data);
+
                     break;
                 case 'M':
+
+                    dataLoad(address, size);
+                    dataStore(address, size, data);
 
                     break;
             }
         }
         scanner.close();
+
+        // Now we must print the cache into its file and print hits evictions and misses
+        System.out.println("Hits: " + hits + " misses: " + misses + " evictions: " + evictions);
+        printCache(S, E);
+
+    }
+
+    private static void printCache(int S, int E) throws FileNotFoundException {
+        PrintWriter writer = new PrintWriter("cache.txt");
+
+        for (int i = 0; i < S; i++) {
+            writer.println("SET " + i + ": ");
+            for (int j = 0; j < E; j++) {
+                writer.println(cache[i][j].toString());
+            }
+            writer.println("--------------------------");
+        }
+        writer.close();
+    }
+
+    private static void dataStore(String address, int size, String data) {
+
     }
 
     // s is how many bits the set part is, and b is how many bits the block offset
@@ -149,6 +175,7 @@ public class Cache {
 
         // The rest of the function only executes if a miss occured.
         String data = accessRam(address);
+        ArrayList<Line> queu = queues.get(setIndex);// Gets out current queu
 
         for (Line line : currentSet) {
             // If the valid bit of a line is 0, we can just write to there without evicting
@@ -156,7 +183,7 @@ public class Cache {
                 line.setValidBit((byte) 1);
                 line.setTag(tag);
                 line.setData(data);
-                queues[setIndex].add(line);
+                queu.add(0, line);// Adds to start of queu
                 return;
             }
         }
@@ -164,16 +191,18 @@ public class Cache {
         // This part of the function only executes if there are no lines with invalid
         // bits in the set, and it evicts using the set quee so that it uses the FIFO
         // policy
-        Line evictedLine = queues[setIndex].remove();
+        Line evictedLine = queu.get(queu.size() - 1);// Get last element
+        queu.remove(queu.size() - 1);// Remove it from the queu
         evictedLine.setTag(tag);
         evictedLine.setData(data);
-        queues[setIndex].add(evictedLine);
+        queu.add(0, evictedLine);// Add to start of queu
         evictions++;
         return;
 
     }
 
     private static String accessRam(String address) {
+        System.out.println(address);
         int index = Integer.parseInt(address, 16);
         index = index / 8;
         return ram.get(index);
