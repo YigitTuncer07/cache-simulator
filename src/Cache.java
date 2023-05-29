@@ -141,7 +141,6 @@ public class Cache {
     // s is how many bits the set part is, and b is how many bits the block offset
     // part is. E is how many lines there are per set
     private static void dataLoad(String address, int size) {
-        address = "0000aaaa";
         String binAddress = hexToBinary(address);
 
         int t = 32 - s - b;// How many bits the tag is
@@ -199,6 +198,9 @@ public class Cache {
     private static String accessRam(String address) {
         int index = Integer.parseInt(address, 16);
         index = index / 8;
+        if (index >= ram.size()){
+            return "0000000000000000";
+        }
         return ram.get(index);
     }
 
