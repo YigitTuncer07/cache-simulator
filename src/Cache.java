@@ -140,6 +140,8 @@ public class Cache {
         for (Line line : currentSet) {
             if (line.getValidBit() == 1) {
                 if ((line.getTag().equals(tag))) {
+                    System.out.println("L " + address + ", " + size);
+                    System.out.println("  Hit");
                     hits++;
                     return;
                 }
@@ -149,6 +151,11 @@ public class Cache {
         // The rest of the function only executes if a miss occured.
         String data = accessRam(address);
         ArrayList<Line> queu = queues.get(setIndex);// Gets out current queu
+
+        System.out.println("L " + address + ", " + size);
+        System.out.println("  Miss");
+        System.out.println("  Place in cache");
+        misses++;
 
         for (Line line : currentSet) {
             // If the valid bit of a line is 0, we can just write to there without evicting
