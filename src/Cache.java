@@ -18,6 +18,7 @@ public class Cache {
     private static int hits;
     private static int misses;
     private static int evictions;
+    private static boolean isModify;
 
     public static void main(String[] args) throws IOException {
 
@@ -95,16 +96,19 @@ public class Cache {
             switch (commandType) {
                 case 'L':
 
+                    isModify = false;
                     dataLoad(address, size);
 
                     break;
                 case 'S':
 
+                    isModify = false;
                     dataStore(address, size, data);
 
                     break;
                 case 'M':
-
+                    isModify = true;
+                    System.out.println("M " + " " + address + ", "+ size + ", " + data);
                     dataLoad(address, size);
                     dataStore(address, size, data);
 
@@ -140,8 +144,14 @@ public class Cache {
         for (Line line : currentSet) {
             if (line.getValidBit() == 1) {
                 if ((line.getTag().equals(tag))) {
-                    System.out.println("L " + address + ", " + size);
-                    System.out.println("  Hit");
+                    if (isModify == true) {
+                        System.out.println("  L " + address + ", " + size);
+                        System.out.println("    Hit");
+                    } else {
+                        System.out.println("L " + address + ", " + size);
+                        System.out.println("  Hit");
+                    }
+
                     hits++;
                     return;
                 }
@@ -152,9 +162,16 @@ public class Cache {
         String data = accessRam(address);
         ArrayList<Line> queu = queues.get(setIndex);// Gets out current queu
 
-        System.out.println("L " + address + ", " + size);
-        System.out.println("  Miss");
-        System.out.println("  Place in cache");
+        if (isModify == true) {
+            System.out.println("  L " + address + ", " + size);
+            System.out.println("    Miss");
+            System.out.println("    Place in cache");
+        } else {
+            System.out.println("L " + address + ", " + size);
+            System.out.println("  Miss");
+            System.out.println("  Place in cache" + "\n");
+        }
+
         misses++;
 
         for (Line line : currentSet) {
@@ -213,16 +230,29 @@ public class Cache {
             }
         }
 
-        if (isHit){
-            System.out.println("S " + address + ", " + size + ", " + data);
-            System.out.println("  Hit");
-            System.out.println("Stored in cache and ram");
-            hits++;
+        if (isHit) {
+            if (isModify == true) {
+                System.out.println("  S " + address + ", " + size + ", " + data);
+                System.out.println("    Hit");
+                System.out.println("    Stored in cache and ram"+ "\n");
+                hits++;
+            }else{
+                System.out.println("S " + address + ", " + size + ", " + data);
+                System.out.println("  Hit");
+                System.out.println("  Stored in cache and ram" + "\n");
+            }
+
         } else {
-            System.out.println("S " + address + ", " + size + ", " + data);
-            System.out.println("  Miss");
-            System.out.println("Stored in ram");
-            misses++;
+            if (isModify == true) {
+                System.out.println("  S " + address + ", " + size + ", " + data);
+                System.out.println("    Hit");
+                System.out.println("    Stored in ram"+ "\n");
+                hits++;
+            }else{
+                System.out.println("S " + address + ", " + size + ", " + data);
+                System.out.println("  Hit");
+                System.out.println("  Stored in ram" + "\n");
+            }
         }
 
         // if it is found or not found in the cache, we still write to memory
@@ -257,20 +287,20 @@ public class Cache {
         int offset = intAdress % 8;
 
         if (b == 0) {
-            data = ram.get(index).substring(2*offset,2*offset + 2);
+            data = ram.get(index).substring(2 * offset, 2 * offset + 2);
         } else if (b == 1) {
             if (offset == 0 || offset == 1) {
                 data = ram.get(index).substring(0, 4);
-            } else if (offset == 2 || offset == 3){
+            } else if (offset == 2 || offset == 3) {
                 data = ram.get(index).substring(4, 8);
-            } else if (offset == 4 || offset == 5){
+            } else if (offset == 4 || offset == 5) {
                 data = ram.get(index).substring(8, 12);
             } else {
                 data = ram.get(index).substring(12);
             }
             data = ram.get(index).substring(offset, offset + 4);
         } else if (b == 2) {
-            if (offset > 3){
+            if (offset > 3) {
                 data = ram.get(index).substring(0, 8);
             } else {
                 data = ram.get(index).substring(8);
