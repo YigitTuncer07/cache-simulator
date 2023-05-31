@@ -30,10 +30,14 @@ public class Line {
     }
 
     public void setData(String data) {
+        System.out.println("Data used to be " + this.data + " || is now " + data);
         this.data = data;
     }
 
     public String toString(){
+        if (tag == ""){
+            return "------- " + validBit + " " + "--------";
+        }
         return tag + " " + validBit + " " + data;
     }
 }

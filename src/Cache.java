@@ -177,6 +177,7 @@ public class Cache {
         evictedLine.setData(data);
         queu.add(0, evictedLine);// Add to start of queu
         evictions++;
+
         return;
 
     }
@@ -222,21 +223,34 @@ public class Cache {
         ram.set(index, editString(ram.get(index), data, 0));
     }
 
-    //Replaces the characters after blockOffset in the originalString with data.
+    // Replaces the characters after blockOffset in the originalString with data.
     private static String editString(String originalString, String data, int blockOffset) {
         StringBuilder stringBuilder = new StringBuilder(originalString);
         stringBuilder.replace(blockOffset, blockOffset + data.length(), data);
         return stringBuilder.toString();
     }
 
-    //Returns 0 if a non existant adress is accesed.
+    // Returns 0 if a non existant adress is accesed.
     private static String accessRam(String address) {
-        int index = Integer.parseInt(address, 16);
+        int intAdress = Integer.parseInt(address, 16);
+        int index = intAdress;
         index = index / 8;
         if (index >= ram.size()) {
             return "0000000000000000";
         }
-        return ram.get(index);
+        String data = "";
+        int offset = intAdress % 8;
+
+        if (b == 0) {
+            data = ram.get(index).substring(offset, offset + 2);
+        } else if (b == 1) {
+            data = ram.get(index).substring(offset, offset + 4);
+        } else if (b == 2) {
+            data = ram.get(index).substring(offset, offset + 8);
+        } else {
+            data = ram.get(index);
+        }
+        return data;
     }
 
     // Prints to cache.txt
