@@ -51,7 +51,7 @@ public class Cache {
         E = Integer.parseInt(args[3]);
         b = Integer.parseInt(args[5]);
         int B = (int) Math.pow(2, b);
-        File traceFile = new File("traces/" + args[7]);
+        File traceFile = new File(args[7]);
 
         System.out.println("S = " + S + "||E = " + E + "||B = " + B + "||File : " + traceFile.exists() + "\n");
 
@@ -200,14 +200,29 @@ public class Cache {
         // Get current set
         Line currentSet[] = cache[setIndex];
 
+        boolean isHit = false;
+
         // Now, we search for our tag in the lines of the set
         // If found, we edit its data
         for (Line line : currentSet) {
             if (line.getValidBit() == 1) {
                 if ((line.getTag().equals(tag))) {
                     line.setData(editString(line.getData(), data, blockOffset));// Changes the data
+                    isHit = true;
                 }
             }
+        }
+
+        if (isHit){
+            System.out.println("S " + address + ", " + size + ", " + data);
+            System.out.println("  Hit");
+            System.out.println("Stored in cache and ram");
+            hits++;
+        } else {
+            System.out.println("S " + address + ", " + size + ", " + data);
+            System.out.println("  Miss");
+            System.out.println("Stored in ram");
+            misses++;
         }
 
         // if it is found or not found in the cache, we still write to memory
@@ -242,11 +257,24 @@ public class Cache {
         int offset = intAdress % 8;
 
         if (b == 0) {
-            data = ram.get(index).substring(offset, offset + 2);
+            data = ram.get(index).substring(2*offset,2*offset + 2);
         } else if (b == 1) {
+            if (offset == 0 || offset == 1) {
+                data = ram.get(index).substring(0, 4);
+            } else if (offset == 2 || offset == 3){
+                data = ram.get(index).substring(4, 8);
+            } else if (offset == 4 || offset == 5){
+                data = ram.get(index).substring(8, 12);
+            } else {
+                data = ram.get(index).substring(12);
+            }
             data = ram.get(index).substring(offset, offset + 4);
         } else if (b == 2) {
-            data = ram.get(index).substring(offset, offset + 8);
+            if (offset > 3){
+                data = ram.get(index).substring(0, 8);
+            } else {
+                data = ram.get(index).substring(8);
+            }
         } else {
             data = ram.get(index);
         }

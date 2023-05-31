@@ -30,7 +30,6 @@ public class Line {
     }
 
     public void setData(String data) {
-        System.out.println("Data used to be " + this.data + " || is now " + data);
         this.data = data;
     }
 
